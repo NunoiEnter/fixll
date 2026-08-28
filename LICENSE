@@ -1,0 +1,22 @@
+# LICENSE / CREDIT
+
+This project (`fixll`) is a wrapper around the prebuilt `VERSION.dll` shim plus
+an installer script.
+
+The shim is derived from **FuckBootStrap** by sst311212:
+  https://github.com/sst311212/FuckBootStrap
+
+FuckBootStrap provides the `bootStrap` compatibility approach (a Detours
+`LoadLibraryW` hook that adjusts the KiriKiri `bootStrap` check patterns). All
+credit for the core approach goes to sst311212.
+
+Modifications made here (in `src/dllmain.cpp` and `src/VERSION.def`):
+  - export forwarders marked `extern "C"` so the `.def` aliases match exactly
+    (no C++ name mangling, which previously resolved exports to import stubs)
+  - `VERSION.def` has no `LIBRARY` line and is passed directly to the linker
+    (the build does NOT use `-lversion`, which aliased exports to stubs)
+  - real implementation of the version APIs
+    (`GetFileVersionInfoSizeW` / `GetFileVersionInfoW` / `VerQueryValueW`) that
+    read the PE version resource directly, instead of forwarding to builtins
+
+No claim of originality over the approach is made. Use at your own risk.
