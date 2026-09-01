@@ -32,7 +32,7 @@ implement the version APIs the game calls. `fixll` addresses both.
 - Optionally downloads and installs the **English MTL patch (VNDB r142645, V1.20)**
   by dropping in the translated `patch2.xp3` (KiriKiri auto-mounts `*.xp3`, so it
   just works).
-- Optionally sets `WINEDLLOVERRIDES=version=n` in the game's Heroic config.
+- Optionally sets `WINEDLLOVERRIDES=version=n,b` in the game's Heroic config.
 
 ## Credit
 
@@ -63,7 +63,7 @@ Then launch the game (via Heroic, or your Wine prefix).
 Set the game's environment override:
 
 ```
-WINEDLLOVERRIDES=version=n
+WINEDLLOVERRIDES=version=n,b
 ```
 
 ## Rebuilding from source (optional)

@@ -27,7 +27,7 @@ Usage:
 
   <game_dir>   path to the game folder containing limelight_lj.exe
   --english    also download + install the English MTL patch (VNDB r142645, V1.20)
-  --heroic     auto-set WINEDLLOVERRIDES=version=n in the game's Heroic config
+  --heroic     auto-set WINEDLLOVERRIDES=version=n,b in the game's Heroic config
                (without this flag, the setting is only printed)
 
 The VERSION.dll shipped here is a 32-bit shim that works on EVERY Linux distro
@@ -108,7 +108,7 @@ fi
 
 # --- 3) optional Heroic override --------------------------------------------
 if [ "$HEROIC" -eq 1 ]; then
-  echo "==> Configuring Heroic WINEDLLOVERRIDES=version=n"
+  echo "==> Configuring Heroic WINEDLLOVERRIDES=version=n,b"
   HC=~/.config/heroic/GamesConfig
   if [ ! -d "$HC" ]; then echo "    Heroic config dir not found ($HC) — set manually"; else
     FOUND=0
@@ -124,18 +124,32 @@ try:
     d = json.load(open(cfg))
 except Exception:
     sys.exit(0)
-ex = d.get("exePath", "")
-if gdir not in ex and os.path.basename(gdir) not in ex:
-    sys.exit(0)
-w = d.get("WINEDLLOVERRIDES", "") or ""
-if "version" not in w:
-    w = (w + "," if w else "") + "version=n"
-    d["WINEDLLOVERRIDES"] = w
-    json.dump(d, open(cfg, "w"), indent=2)
-    print("    updated", cfg, "-> WINEDLLOVERRIDES=", w)
+updated=False
+# per-game entries (Heroic stores each game under its ID key)
+for k,v in list(d.items()):
+    if isinstance(v, dict) and "enviromentOptions" in v:
+        for o in v["enviromentOptions"]:
+            if o.get("key")=="WINEDLLOVERRIDES":
+                if "version" not in o.get("value",""):
+                    o["value"]=(o["value"]+"," if o["value"] else "")+"version=n,b"
+                    print(f"    updated {k} -> WINEDLLOVERRIDES={o['value']}")
+                updated=True
+                break
+        else:
+            v["enviromentOptions"].append({"key":"WINEDLLOVERRIDES","value":"version=n,b"})
+            print(f"    added {k} -> WINEDLLOVERRIDES=version=n,b")
+            updated=True
+# legacy root-level entry
+for o in d.get("enviromentOptions",[]):
+    if o.get("key")=="WINEDLLOVERRIDES" and "version" not in o.get("value",""):
+        o["value"]=(o["value"]+"," if o["value"] else "")+"version=n,b"
+        print(f"    updated root -> WINEDLLOVERRIDES={o['value']}")
+        updated=True
+if updated:
+    json.dump(d, open(cfg,"w"), indent=2)
 PY
         else
-          echo "    python3 not found — set WINEDLLOVERRIDES=version=n manually in $cfg"
+          echo "    python3 not found — set WINEDLLOVERRIDES=version=n,b manually in $cfg"
         fi
       fi
     done
@@ -143,7 +157,7 @@ PY
   fi
 else
   echo "==> Reminder: in Heroic, set the game's environment override:"
-  echo "    WINEDLLOVERRIDES=version=n"
+  echo "    WINEDLLOVERRIDES=version=n,b"
 fi
 
 echo
